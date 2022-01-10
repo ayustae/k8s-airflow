@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-webserver
+  namespace: airflow
+  labels:
+    app: airflow
+    component: webserver
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: airflow
+      component: webserver
+  template:
+    metadata:
+      name: airflow
+      labels:
+        app: airflow
+        component: webserver
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: airflow
+      containers:
+      - name: webserver
+        image: apache/airflow:latest
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args: ["airflow webserver"]
+        ports:
+        - name: airflow-web
+          containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: airflow-config
+        env:
+        - name: AWS_S3_DAGS_BUCKET
+          value: "sdg-tht-airflow-dags"
+        - name: AWS_S3_LOGS_BUCKET
+          value: "sdg-tht-airflow-logs"
+        volumeMounts:
+        - name: airflow-dags
+          mountPath: /opt/airflow/dags
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "300m"
+            memory: "1Gi"
+      - name: s3-sync
+        image: amazonlinux:latest
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args: ["yum install awscli -y && while $(test 1=1); \
+                do aws s3 sync s3://${AWS_S3_DAGS_BUCKET} /mnt --delete; \
+                sleep ${S3_SYNC_INTERVAL}; \
+                done"]
+        envFrom:
+        - configMapRef:
+            name: airflow-config
+        env:
+        - name: AWS_S3_DAGS_BUCKET
+          value: "sdg-tht-airflow-dags"
+        - name: AWS_S3_LOGS_BUCKET
+          value: "sdg-tht-airflow-logs"
+        - name: S3_SYNC_INTERVAL
+          value: "30"
+        volumeMounts:
+        - name: airflow-dags
+          mountPath: /mnt
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+      volumes:
+      - name: airflow-dags
+        emptyDir: {}

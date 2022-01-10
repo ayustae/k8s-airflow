@@ -1,0 +1,23 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: airflow-init-db
+  namespace: airflow
+spec:
+  backoffLimit: 2
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: airflow-init
+        image: apache/airflow:latest
+        command: ["/bin/sh", "-c"]
+        args: ["airflow db init"]
+        envFrom:
+        - configMapRef:
+            name: airflow-config
+        env:
+        - name: AWS_S3_DAGS_BUCKET
+          value: "sdg-tht-airflow-dags"
+        - name: AWS_S3_LOGS_BUCKET
+          value: "sdg-tht-airflow-logs"

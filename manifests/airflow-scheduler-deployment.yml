@@ -1,0 +1,98 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: airflow-scheduler
+  namespace: airflow
+  labels:
+    app: airflow
+    component: scheduler
+spec:
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: airflow
+      component: scheduler
+  template:
+    metadata:
+      name: airflow
+      labels:
+        app: airflow
+        component: scheduler
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: airflow
+      containers:
+      - name: scheduler
+        image: apache/airflow:latest
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args: ["airflow scheduler"]
+        envFrom:
+        - configMapRef:
+            name: airflow-config
+        env:
+        - name: AWS_S3_DAGS_BUCKET
+          value: "sdg-tht-airflow-dags"
+        - name: AWS_S3_LOGS_BUCKET
+          value: "sdg-tht-airflow-logs"
+        volumeMounts:
+        - name: airflow-dags
+          mountPath: /opt/airflow/dags
+        - name: airflow-worker-pod-template
+          mountPath: /opt/airflow/worker-pod-template.yml
+          subPath: worker-pod-template.yml
+        livenessProbe:
+          initialDelaySeconds: 60
+          failureThreshold: 2
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 10
+          exec:
+            command: ["/var/local/scheduler_checker.py"]
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+      - name: s3-sync
+        image: amazonlinux:latest
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args: ["yum install awscli -y && while $(test 1=1); \
+                do aws s3 sync s3://${AWS_S3_DAGS_BUCKET} /opt/airflow/dags --delete; \
+                sleep ${S3_SYNC_INTERVAL}; \
+                done"]
+        envFrom:
+        - configMapRef:
+            name: airflow-config
+        env:
+        - name: AWS_S3_DAGS_BUCKET
+          value: "sdg-tht-airflow-dags"
+        - name: AWS_S3_LOGS_BUCKET
+          value: "sdg-tht-airflow-logs"
+        - name: S3_SYNC_INTERVAL
+          value: "30"
+        volumeMounts:
+        - name: airflow-dags
+          mountPath: /opt/airflow/dags
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "100m"
+            memory: "128Mi"
+      volumes:
+      - name: airflow-dags
+        emptyDir: {}
+      - name: airflow-worker-pod-template
+        configMap:
+          defaultMode: 420
+          name: airflow-worker-pod-template

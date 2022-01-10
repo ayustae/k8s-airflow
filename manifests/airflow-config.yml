@@ -1,0 +1,34 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: airflow-config
+  namespace: airflow
+data:
+  AIRFLOW__API__AUTH_BACKEND: "airflow.api.auth.backend.deny_all"
+  AIRFLOW__CLI__API_CLIENT: "airflow.api.client.json_client"
+  AIRFLOW__CLI__ENDPOINT_URL: "webserver.airflow.svc.cluster.local:8080"
+  AIRFLOW__CORE__DAG_FOLDER: "/opt/airflow/dags"
+  AIRFLOW__CORE__EXECUTOR: "KubernetesExecutor"
+  AIRFLOW__CORE__FERNET_KEY_SECRET: "fernet_key"
+  AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS: "False"
+  AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+  AIRFLOW__CORE__MAX_ACTIVE_RUNS_PER_DAG: "4"
+  AIRFLOW__CORE__MAX_ACTIVE_TASKS_PER_DAG: "8"
+  AIRFLOW__CORE__PARALLELISM: "16"
+  AIRFLOW__CORE__SQL_ALCHEMY_CONN_SECRET: "sql_conn_string"
+  AIRFLOW__KUBERNETES__DELETE_WORKER_PODS: "True"
+  AIRFLOW__KUBERNETES__DELETE_WORKER_PODS_ON_FAILURE: "True"
+  AIRFLOW__KUBERNETES__IN_CLUSTER: "True"
+  AIRFLOW__KUBERNETES__NAMESPACE: "airflow"
+  AIRFLOW__KUBERNETES__POD_TEMPLATE_FILE: "/opt/airflow/worker-pod-template.yml"
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_REPOSITORY: "apache/airflow"
+  AIRFLOW__KUBERNETES__WORKER_CONTAINER_TAG: "latest"
+  AIRFLOW__LOGGING__ENCRYPT_S3_LOGS: "True"
+  AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER: "s3://${AWS_S3_LOGS_BUCKET}"
+  AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID: "aws_s3"
+  AIRFLOW__LOGGING__REMORE_LOGGING: "True"
+  AIRFLOW__SECRETS__BACKEND: "airflow.providers.amazon.aws.secrets.secrets_manager.SecretsManagerBackend"
+  AIRFLOW__SECRETS__BACKEND_KWARGS: "{\"connections_prefix\": \"airflow\", \"variables_prefix\": \"airflow\", \"region_name\": \"us-east-1\"}"
+  AIRFLOW__WEBSERVER__SECRET_KEY_SECRET: "secret_key"
+  AIRFLOW__WEBSERVER__WORKERS: "2"
+  AIRFLOW_CONN_AWS_S3: "aws://"

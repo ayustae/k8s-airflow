@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test
+  namespace: airflow
+  labels:
+    app: test
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: test
+  template:
+    metadata:
+      name: test
+      namespace: airflow
+      labels:
+        app: test
+    spec:
+      automountServiceAccountToken: true
+      serviceAccountName: airflow
+      containers:
+      - name: test
+        image: amazonlinux:latest
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args: ["sleep 6000"]
+        envFrom:
+        - configMapRef:
+            name: airflow-config
+        env:
+        - name: AWS_S3_DAGS_BUCKET
+          value: "sdg-tht-airflow-dags"
+        - name: AWS_S3_LOGS_BUCKET
+          value: "sdg-tht-airflow-logs"

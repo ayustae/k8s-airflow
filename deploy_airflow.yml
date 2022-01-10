@@ -1,0 +1,104 @@
+"""
+Ansible playbook to deploy Airflow on a EKS cluster.
+"""
+---
+- name: "Create the k8s resources for Apache Airflow."
+  hosts: localhost
+  become: no
+  tasks:
+
+    - name: "Create a kubeconfig file."
+      file:
+        path: "{{ kubeconfig_file }}"
+        mode: 0644
+        state: file
+
+    - name: "Populate the kubeconfig file."
+      shell:
+        cmd: |
+          aws eks update-kubeconfig \
+          --region "{{ aws_region }}" \
+          --name "{{eks_cluster}}" \
+          --kubeconfig "{{ kubeconfig_file }}"
+
+    - name: "Create the namespace for the Airflow deployment."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-ns.yml"
+
+    - name: "Create a Service Account for Airflow."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-sa.yml"
+
+    - name: "Create a Role for the Airflow Service Account."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-role.yml"
+
+    - name: "Bind the Role to the Service Account."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-rolebinding.yml"
+
+    - name: "Create the Airflow configuration Config Map."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-config.yml"
+
+    - name: "Create the worker node template Config Map."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-worker-template.yml"
+
+    - name: "Initiaize the DB."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-init-db-job.yml"
+
+    - name: "Create the initial user."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-create-user-job.yml"
+
+    - name: "Create the Airflow Webserver Deployment."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-webserver-deployment.yml"
+
+    - name: "Create the Airflow Scheduler Deployment."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-scheduler-deployment.yml"
+
+    - name: "Create the Airflow Service."
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        template: "{{ manifests_folder }}/airflow-webserver-svc.yml"
+
+    - name: "Delete the provisional kubeconfig file."
+      file:
+        path: "{{ kubeconfig_file }}"
+        state: absent
