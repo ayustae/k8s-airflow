@@ -1,6 +1,6 @@
 # Ansible playbook to deploy Airflow on a EKS cluster.
 ---
-- name: "Create the k8s resources for Apache Airflow."
+- name: "Create the k8s resources for Apache Airflow"
   vars:
     kubeconfig_file: "kubeconfig"
     aws_region: us-east-1
@@ -10,7 +10,7 @@
   become: no
   tasks:
 
-    - name: "Get the kubeconfig file."
+    - name: "Get the kubeconfig file"
       shell:
         cmd: |
           aws eks update-kubeconfig \
@@ -18,94 +18,96 @@
           --name "{{eks_cluster}}" \
           --kubeconfig "{{ kubeconfig_file }}"
 
-    - name: "Create the namespace for the Airflow deployment."
+    - name: "Create the namespace for the Airflow deployment"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-ns.yml"
 
-    - name: "Create a Service Account for Airflow."
+    - name: "Create a Service Account for Airflow"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-sa.yml"
 
-    - name: "Create a Role for the Airflow Service Account."
+    - name: "Create a Role for the Airflow Service Account"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-role.yml"
 
-    - name: "Bind the Role to the Service Account."
+    - name: "Bind the Role to the Service Account"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-rolebinding.yml"
 
-    - name: "Create the Airflow configuration Config Map."
+    - name: "Create the Airflow configuration Config Map"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-config.yml"
 
-    - name: "Create the worker node src Config Map."
+    - name: "Create the worker node src Config Map"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-worker-template.yml"
 
-    - name: "Initiaize the DB."
+    - name: "Initialize the DB"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-init-db-job.yml"
 
-    - name: "Wait for the DB to be initialized."
-      command: "sleep 30"
+    - name: "Wait for the DB to be initialized"
+      pause:
+        seconds: 30
+        prompt: "Waiting for the Airflow DB to be initialized."
 
-    - name: "Create a secret with the initial user credentials."
+    - name: "Create a secret with the initial user credentials"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-init-user-secret.yml"
 
-    - name: "Create the initial user."
+    - name: "Create the initial user"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-create-user-job.yml"
 
-    - name: "Create the Airflow Webserver Deployment."
+    - name: "Create the Airflow Webserver Deployment"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-webserver-deployment.yml"
 
-    - name: "Create the Airflow Scheduler Deployment."
+    - name: "Create the Airflow Scheduler Deployment"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-scheduler-deployment.yml"
 
-    - name: "Create the Airflow Service."
+    - name: "Create the Airflow Service"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
         apply: yes
         state: present
         src: "{{ manifests_folder }}/airflow-svc.yml"
 
-    - name: "Delete the provisional kubeconfig file."
+    - name: "Delete the provisional kubeconfig file"
       file:
         path: "{{ kubeconfig_file }}"
         state: absent
