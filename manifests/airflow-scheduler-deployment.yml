@@ -37,9 +37,9 @@ spec:
             name: airflow-config
         env:
         - name: AWS_S3_DAGS_BUCKET
-          value: "sdg-tht-airflow-dags"
+          value: "tht-airflow-dags"
         - name: AWS_S3_LOGS_BUCKET
-          value: "sdg-tht-airflow-logs"
+          value: "tht-airflow-logs"
         volumeMounts:
         - name: airflow-dags
           mountPath: /opt/airflow/dags
@@ -74,9 +74,9 @@ spec:
             name: airflow-config
         env:
         - name: AWS_S3_DAGS_BUCKET
-          value: "sdg-tht-airflow-dags"
+          value: "tht-airflow-dags"
         - name: AWS_S3_LOGS_BUCKET
-          value: "sdg-tht-airflow-logs"
+          value: "tht-airflow-logs"
         - name: S3_SYNC_INTERVAL
           value: "30"
         volumeMounts:

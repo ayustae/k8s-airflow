@@ -46,6 +46,13 @@
         state: present
         src: "{{ manifests_folder }}/airflow-rolebinding.yml"
 
+    - name: "Bind the edit Cluster Role to the Service Account"
+      k8s:
+        kubeconfig: "{{ kubeconfig_file }}"
+        apply: yes
+        state: present
+        src: "{{ manifests_folder }}/airflow-clusterrolebinding.yml"
+
     - name: "Create the Airflow configuration Config Map"
       k8s:
         kubeconfig: "{{ kubeconfig_file }}"
