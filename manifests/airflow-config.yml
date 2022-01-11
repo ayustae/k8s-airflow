@@ -31,4 +31,3 @@ data:
   AIRFLOW__SECRETS__BACKEND_KWARGS: "{\"connections_prefix\": \"airflow/connections\", \"variables_prefix\": \"airflow/variables\", \"region_name\": \"us-east-1\"}"
   AIRFLOW__WEBSERVER__SECRET_KEY_SECRET: "secret_key"
   AIRFLOW__WEBSERVER__WORKERS: "2"
-  AIRFLOW_CONN_AWS_S3: "aws://"
