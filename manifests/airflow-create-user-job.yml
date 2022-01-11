@@ -12,7 +12,7 @@ spec:
       - name: airflow-init
         image: apache/airflow:latest
         command: ["/bin/sh", "-c"]
-        args: ["airflow users create --username admin --firstname Admin --lastname Admin --role Admin --password Secret123 --email example@example.com"]
+        args: ["airflow users create --username ${AIRFLOW_USERNAME} --firstname Admin --lastname Admin --role Admin --password ${AIRFLOW_PASSWORD} --email example@example.com"]
         envFrom:
         - configMapRef:
             name: airflow-config
@@ -21,3 +21,13 @@ spec:
           value: "sdg-tht-airflow-dags"
         - name: AWS_S3_LOGS_BUCKET
           value: "sdg-tht-airflow-logs"
+        - name: AIRFLOW_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: airflow-init-user-credentials
+              key: username
+        - name: AIRFLOW_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: airflow-init-user-credentials
+              key: password

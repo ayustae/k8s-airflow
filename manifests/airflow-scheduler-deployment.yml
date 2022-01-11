@@ -47,7 +47,7 @@ spec:
           mountPath: /opt/airflow/worker-pod-template.yml
           subPath: worker-pod-template.yml
         livenessProbe:
-          initialDelaySeconds: 60
+          initialDelaySeconds: 90
           failureThreshold: 2
           periodSeconds: 10
           successThreshold: 1
