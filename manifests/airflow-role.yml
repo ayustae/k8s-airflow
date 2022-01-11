@@ -11,15 +11,19 @@ rules:
   - list
   - watch
   - create
-  - update
   - delete
-- apiGroups: ["batch", "extensions"]
-  resources: ["jobs"]
+  - patch
+- apiGroups: [""]
+  resources: ["pods/log"]
   verbs:
   - get
   - list
-  - watch
+- apiGroups: [""]
+  resources: ["pods/exec"]
+  verbs:
   - create
-  - update
-  - patch
-  - delete
+  - get
+- apiGroups: [""]
+  resources: ["events"]
+  verbs:
+  - list
